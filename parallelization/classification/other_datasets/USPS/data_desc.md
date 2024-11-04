@@ -1,0 +1,3 @@
+- link: https://www.kaggle.com/datasets/bistaumanga/usps-dataset
+- data size: 9298 x 257
+- classes : 10
