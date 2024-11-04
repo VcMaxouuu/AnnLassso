@@ -1,0 +1,4 @@
+- test set size : 70x250
+- SNR = 3
+- errors - N(0,1)
+- y = 3Xb + e
