@@ -7,7 +7,7 @@ def function_derivative(func, u):
     return u.grad.item()
 
 
-def lambda_qut_regression(X, act_fun, hidden_dims = (20, ), n_samples=5000, mini_batch_size=500, alpha=0.05, option='quantile'):
+def lambda_qut_regression(X, act_fun, hidden_dims = (20, ), n_samples=5000, alpha=0.05, option='quantile'):
 
     n, _ = X.shape
     fullList = torch.zeros(n_samples)
@@ -37,28 +37,19 @@ def lambda_qut_regression(X, act_fun, hidden_dims = (20, ), n_samples=5000, mini
         pass
 
 
-
-def lambda_qut_classification(X, hat_p, act_fun, hidden_dims = (20, ), n_samples=5000, mini_batch_size=500, alpha=0.05, option='quantile'):
-    offset = 0 if n_samples % mini_batch_size == 0 else 1
-    n_samples_per_batch = n_samples // mini_batch_size + offset
-
+def lambda_qut_classification(X, hat_p, act_fun, hidden_dims = (20, ), n_samples=5000, alpha=0.05, option='quantile'):
     n, _ = X.shape
-    fullList = torch.zeros((mini_batch_size * n_samples_per_batch,))
-    num_classes = len(hat_p)
+    fullList = torch.zeros(n_samples)
 
-    for index in range(n_samples_per_batch):
-        y_sample = torch.multinomial(hat_p, num_samples=n * mini_batch_size, replacement=True)
-        y_sample = torch.nn.functional.one_hot(y_sample, num_classes=num_classes).float()
-        y_sample = y_sample.view(n, mini_batch_size, num_classes)
-        y_mean = y_sample.mean(dim=1, keepdim=True)
-        y = (y_mean - y_sample).squeeze(1)
+    for index in range(n_samples):
+        y_sample = torch.multinomial(hat_p, n, replacement=True)
+        y_sample = torch.nn.functional.one_hot(y_sample).type(X.dtype)
+        y = y_sample - torch.mean(y_sample, axis=0)
+        xy = torch.matmul(X.T, y)
+        xy_sum = torch.sum(torch.abs(xy), axis=1)
+        xy_max = torch.amax(xy_sum)
 
-        # Perform einsum operation on the subsampled X
-        xy = torch.einsum('ij,ikl->ijkl', X, y)
-        xy_sum = xy.sum(dim=0).abs().sum(dim=2)
-        xy_max = xy_sum.max(dim=0).values
-
-        fullList[index * mini_batch_size:(index + 1) * mini_batch_size] = xy_max
+        fullList[index] = xy_max
 
     if act_fun is not None: # None for linear and 'act_fun' for neural network
         if len(hidden_dims) == 1: pi_l = 1
