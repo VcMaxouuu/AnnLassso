@@ -52,7 +52,7 @@ def simulate(data, indices, models, run_id, outdir):
     dataset = (X_train, y_train, X_test, y_test)
 
     X_scaled = utils.StandardScaler().fit_transform(utils.X_to_tensor(X_train))
-    lambda_qut = utils.lambda_qut_classification(X_scaled, utils.get_hat_p(y_train.values), utils.ShiftedReLu(), mini_batch_size=50)
+    lambda_qut = utils.lambda_qut_classification(X_scaled, utils.get_hat_p(y_train.values), utils.ShiftedReLu())
 
     # Initialize results DataFrame for this run
     results_df = pd.DataFrame(index=[run_id], columns=['run_id'] + [m.__name__ for m in models])
